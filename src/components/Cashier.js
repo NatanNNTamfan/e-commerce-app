@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 import { notify } from '../notifications';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root');
 
 const Cashier = () => {
   const [consumerData, setConsumerData] = useLocalStorage('consumerData', []);
@@ -32,8 +35,8 @@ const Cashier = () => {
         i === index
           ? {
               ...item,
-              payment: parseFloat(paymentData.amount) || 0,
-              discount: parseFloat(paymentData.discount) || 0,
+              payment: parseFloat(paymentData.amount) || 0, // Update payment
+              discount: parseFloat(paymentData.discount) || 0, // Update discount
               status: 'Validated',
             }
           : item
@@ -111,6 +114,7 @@ const Cashier = () => {
 
 const TransactionList = ({ data, onValidate }) => {
   const [paymentInput, setPaymentInput] = useState({});
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const handlePaymentChange = (index, field, value) => {
     setPaymentInput((prevInput) => ({
@@ -125,6 +129,14 @@ const TransactionList = ({ data, onValidate }) => {
       const { [index]: _, ...rest } = prevInput;
       return rest;
     });
+  };
+
+  const handleOpenModal = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrder(null);
   };
 
   return (
@@ -151,21 +163,7 @@ const TransactionList = ({ data, onValidate }) => {
               <td className="py-2 px-4 border-b">{item.discount || ''}</td>
               <td className="py-2 px-4 border-b">
                 <button
-                  onClick={() => {
-                    // Check if items exist before mapping
-                    const itemsDetail = item.items
-                      ? item.items
-                          .map((item) => `- ${item.name} (Qty: ${item.quantity})`)
-                          .join('\n')
-                      : 'Tidak ada item';
-                    alert(
-                      `Detail Pesanan:\n\nID Pesanan: ${item.id}\nNama Penerima: ${
-                        item.recipientName
-                      }\nAlamat Pengiriman: ${item.shippingAddress}\nCatatan: ${
-                        item.note || '-'
-                      }\n\nItems:\n${itemsDetail}`
-                    );
-                  }}
+                  onClick={() => handleOpenModal(item)}
                   className="bg-blue-500 text-white px-2 py-1 rounded"
                 >
                   Lihat Detail
@@ -200,6 +198,68 @@ const TransactionList = ({ data, onValidate }) => {
           ))}
         </tbody>
       </table>
+
+      <Modal
+        isOpen={selectedOrder !== null}
+        onRequestClose={handleCloseModal}
+        contentLabel="Detail Pesanan"
+        className="modal"
+        overlayClassName="overlay"
+        style={{
+          overlay: {
+            zIndex: 1000,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          content: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '50%',
+            maxWidth: '500px',
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '0.5rem',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+          },
+        }}
+      >
+        <h2 className="text-xl font-bold mb-4">Detail Pesanan</h2>
+        {selectedOrder && (
+          <div>
+            <p>
+              <strong>ID Pesanan:</strong> {selectedOrder.id}
+            </p>
+            <p>
+              <strong>Nama Penerima:</strong> {selectedOrder.recipientName}
+            </p>
+            <p>
+              <strong>Alamat Pengiriman:</strong> {selectedOrder.shippingAddress}
+            </p>
+            <p>
+              <strong>Catatan:</strong> {selectedOrder.note || '-'}
+            </p>
+            <h3 className="text-lg font-bold mt-4">Items:</h3>
+            <ul>
+              {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                selectedOrder.items.map((item) => (
+                  <li key={item.name}>
+                    - {item.name} (Qty: {item.quantity})
+                  </li>
+                ))
+              ) : (
+                <li>Tidak ada item</li>
+              )}
+            </ul>
+          </div>
+        )}
+        <button
+          onClick={handleCloseModal}
+          className="bg-gray-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Tutup
+        </button>
+      </Modal>
     </div>
   );
 };
