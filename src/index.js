@@ -1,17 +1,29 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
+import { createRoot } from 'react-dom/client';
+import './styles.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { ToastContainer } from 'react-toastify';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const defaultUsers = [
+  { username: 'admin', password: 'admin123', role: 'admin' },
+  { username: 'kasir', password: 'kasir123', role: 'cashier' },
+  { username: 'gudang', password: 'gudang123', role: 'warehouse' },
+  { username: 'supplier', password: 'supplier123', role: 'supplier' }
+];
+
+const existingUsers = JSON.parse(localStorage.getItem('users')) || [];
+const existingUsernames = existingUsers.map(user => user.username);
+
+const mergedUsers = [...existingUsers, ...defaultUsers.filter(user => !existingUsernames.includes(user.username))];
+
+localStorage.setItem('users', JSON.stringify(mergedUsers));
+
+const container = document.getElementById('root');
+const root = createRoot(container);
+
 root.render(
   <React.StrictMode>
     <App />
+    <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
