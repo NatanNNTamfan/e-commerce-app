@@ -49,7 +49,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
         </Routes>
       </div>
-      <ToastContainer /> 
+      <ToastContainer /> {/* Inisialisasi react-toastify */}
     </Router>
   );
 };
